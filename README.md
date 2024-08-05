@@ -20,7 +20,7 @@ There are a few things to look out for when switching to Obsi 2:
 
 1. Now you have to include `obsi2` as a library
 2. In order for your code to be ran in the loop, you have to put `obsi.init()` at the end of your main file
-3. Replace any mentions of `obsi.filesystem` with `obsi.fs`
+3. Replace any mentions of `obsi.filesystem` with `obsi.fs` and `obsi.time` with `obsi.timer` 
 4. Move the code from `config.lua` file (it is no longer used by obsi) to the config inside `obsi2/init.lua`
 5. Replace any mentions of `hmon` and `parea` rendering apis to `basic` and `neat` respectively
 6. If the code outside of your `main.lua` file is also using `obsi`, then require it there as well. (Don't worry, `require` caches any of the packages it loads.)
