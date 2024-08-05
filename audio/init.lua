@@ -5,7 +5,7 @@ local t = os.clock()
 ---@class obsi.audio
 local audio = {}
 
----@type Speaker[]
+---@type ccTweaked.peripheral.Speaker[]
 local channels = {}
 local fakeSpeaker = false
 
@@ -13,7 +13,7 @@ local fakeSpeaker = false
 ---@field speaker integer
 ---@field pitch number
 ---@field volume number
----@field instrument instrument?
+---@field instrument ccTweaked.peripheral.instrument?
 ---@field sound string?
 ---@field latency number?
 ---@field timing number?
@@ -44,7 +44,7 @@ local notebuffer = {}
 
 -- Plays a single note. If you are not sure what channel to use, just use 1.
 ---@param channel integer
----@param instrument instrument
+---@param instrument ccTweaked.peripheral.instrument
 ---@param pitch number  from 0 to 24
 ---@param volume number? from 0 to 3
 ---@param latency number? in seconds
@@ -89,7 +89,7 @@ function audio.refreshChannels()
 	else
 		if periphemu then
 			periphemu.create("ObsiSpeaker", "speaker")
-			channels[1] = peripheral.wrap("ObsiSpeaker") --[[@as Speaker]]
+			channels[1] = peripheral.wrap("ObsiSpeaker") --[[@as ccTweaked.peripheral.Speaker]]
 			fakeSpeaker = false
 		else
 			channels[1] = {
@@ -115,7 +115,7 @@ function audio.notesPlaying()
 	return #notebuffer
 end
 
----@param soundPath path
+---@param soundPath ccTweaked.fs.path
 ---@return obsi.Audio
 function audio.newSound(soundPath)
 	local contents, e = fs.read(soundPath)
