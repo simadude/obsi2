@@ -20,7 +20,7 @@ end
 local template = {}
 ---@param x integer
 ---@param y integer
----@param color color
+---@param color ccTweaked.colors.color
 function template:setPixel(x, y, color)
 	self.data[y][x] = color
 end
@@ -88,7 +88,7 @@ function template:resize(w, h)
 	self.height = h
 end
 
----@param terminal Redirect?
+---@param terminal ccTweaked.term.Redirect??
 ---@param width integer?
 ---@param height integer?
 function neat.newCanvas(terminal, width, height)

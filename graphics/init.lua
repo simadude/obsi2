@@ -64,7 +64,7 @@ local function getBlit(color)
 end
 
 ---Sets a specific palette color
----@param color string|color
+---@param color string|ccTweaked.colors.color
 ---@param r number value within the range [0-1]
 ---@param g number value within the range [0-1]
 ---@param b number value within the range [0-1]
@@ -159,8 +159,8 @@ function graphics.pixelToTermCoordinates(x, y)
 	end
 end
 
----@param col color|string
----@return color
+---@param col ccTweaked.colors.color|string
+---@return ccTweaked.colors.color
 local function toColor(col)
 	if type(col) == "string" then
 		return 2^tonumber(col, 16)
@@ -168,22 +168,22 @@ local function toColor(col)
 	return col
 end
 
----@param color color|string
+---@param color ccTweaked.colors.color|string
 function graphics.setBackgroundColor(color)
 	graphics.bgColor = toColor(color)
 end
 
----@param color color|string
+---@param color ccTweaked.colors.color|string
 function graphics.setForegroundColor(color)
 	graphics.fgColor = toColor(color)
 end
 
----@return color
+---@return ccTweaked.colors.color
 function graphics.getBackgroundColor()
 	return graphics.bgColor
 end
 
----@return color
+---@return ccTweaked.colors.color
 function graphics.getForegroundColor()
 	return graphics.fgColor
 end
@@ -197,7 +197,7 @@ end
 
 ---@param x number
 ---@param y number
----@param color? color
+---@param color? ccTweaked.colors.color
 local function safeOffsetPixel(x, y, color)
 	color = color or graphics.fgColor
 	x, y = floor(x-graphics.originX+1), floor(y-graphics.originY+1)
@@ -348,7 +348,7 @@ end
 ---Returns a blank obsi.Image with a solid color. 
 ---@param width integer
 ---@param height integer
----@param filler? color|string
+---@param filler? ccTweaked.colors.color|string
 ---@return obsi.Image
 function graphics.newBlankImage(width, height, filler)
 	checkType(width, "width", "number")
@@ -427,14 +427,14 @@ function graphics.newCanvas(width, height)
 
 	---@param x integer
 	---@param y integer
-	---@param color color
+	---@param color ccTweaked.colors.color
 	function canvas:setPixel(x, y, color)
 		self.data[y][x] = color
 	end
 
 	---@param x integer
 	---@param y integer
-	---@return color
+	---@return ccTweaked.colors.color
 	function canvas:getPixel(x, y)
 		return self.data[y][x]
 	end
@@ -523,8 +523,8 @@ end
 ---@param text string
 ---@param x integer
 ---@param y integer
----@param fgColor? string|color
----@param bgColor? string|color
+---@param fgColor? string|ccTweaked.colors.color
+---@param bgColor? string|ccTweaked.colors.color
 function graphics.write(text, x, y, fgColor, bgColor)
 	checkType(text, "text", "string")
 	checkType(x, "x", "number")

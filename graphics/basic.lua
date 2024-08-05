@@ -61,12 +61,12 @@ end
 
 ---@param x integer
 ---@param y integer
----@param color color
+---@param color ccTweaked.colors.color
 function template:setPixel(x, y, color)
 	self.data[y][x] = color
 end
 
----@param terminal Redirect?
+---@param terminal ccTweaked.term.Redirect?
 ---@param width integer?
 ---@param height integer?
 function basic.newCanvas(terminal, width, height)

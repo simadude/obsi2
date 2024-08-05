@@ -135,7 +135,7 @@ local function generate_lookups()
 end
 
 ---@param box table
----@param color color
+---@param color ccTweaked.colors.color
 ---@param keep_existing? boolean
 function pixelbox.restore(box, color, keep_existing)
 	if not keep_existing then
@@ -231,29 +231,29 @@ function box_object:render()
 	end
 end
 
----@param color color
+---@param color ccTweaked.colors.color
 function box_object:clear(color)
 	pixelbox.restore(self,color)
 end
 
 ---@param x integer
 ---@param y integer
----@param color color
+---@param color ccTweaked.colors.color
 function box_object:setPixel(x,y,color)
 	self.data[y][x] = color
 end
 
 ---@param w integer
 ---@param h integer
----@param color color
+---@param color ccTweaked.colors.color
 function box_object:resize(w, h, color)
 	self.width = w*2
 	self.height = h*3
 	pixelbox.restore(self, color or self.background or colors.black, true)
 end
 
----@param terminal Redirect
----@param bg? color
+---@param terminal ccTweaked.term.Redirect
+---@param bg? ccTweaked.colors.color
 ---@return pixelbox.box
 function pixelbox.newCanvas(terminal, bg)
 	---@class pixelbox.box

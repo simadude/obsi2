@@ -8,7 +8,7 @@ Improvements in Obsi 2:
 * More optimized `obsi.graphics.rectangle` function
 * New `obsi.graphics.getPalette` function! (Yes, it didn't exist before. Also be aware that it creates a new table on every call. Sorry.)
 * FPS counter that is accessible with `obsi.timer.getFPS()`
-* Module `obsi.filesystem` was renamed to `obsi.fs`
+* Module `obsi.filesystem` was renamed to `obsi.fs`, and module `obsi.time` to `obsi.timer`
 * Rendering APIs `hmon` and `parea` were renamed to `basic` and `neat`
 * File extensions are mostly ignored (This is useful for when you have a system for converting `nfp` files to `orli` files, but don't want to bother with renaming every file in code)
 * Fixed a crash when the game would play noteblock music in Minecraft
