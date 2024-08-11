@@ -25,5 +25,5 @@ def writeLuaFiles(path: PosixPath):
                 bundle.write(f.read())
                 bundle.write("\nend\n")
 writeLuaFiles(PosixPath(""))
-bundle.write('return require("obsi2")\n')
+bundle.write('return package.preload["obsi2"]()\n')
 bundle.close()
