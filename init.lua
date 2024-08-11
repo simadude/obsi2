@@ -37,7 +37,7 @@ obsi.mouse, mouseDown, mouseUp, mouseMove = require("obsi2.mouse")()
 obsi.audio, soundLoop = require("obsi2.audio")(obsi.fs)
 obsi.state = require("obsi2.state")
 obsi.debug = false
-obsi.version = "2.0.0"
+obsi.version = "2.0.1"
 
 obsi.load = emptyFunc
 ---@type fun(dt: number)
