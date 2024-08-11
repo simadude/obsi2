@@ -1,0 +1,73 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on push of version tags (e.g., v1.0.0)
+
+jobs:
+  build:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.9'
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+
+      - name: Install dependencies
+        run: npm install lua-format
+
+      - name: Set up git-cliff
+        run: npm install -g git-cliff
+
+      - name: Bundle library
+        run: python .github/workflows/bundle.py
+
+      - name: Minify library
+        run: node .github/workflows/luamin.js bundled.lua minified.lua
+
+      - name: License files
+        run: python .github/workflows/addLicenses.py
+
+      - name: Generate changelog
+        run: git-cliff -o CHANGELOG.md
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: false
+
+      - name: Upload bundled library
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bundled.lua
+          asset_name: obsi-bundled.lua
+          asset_content_type: text/plain
+
+      - name: Upload minified library
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./minified.lua
+          asset_name: obsi-minified.lua
+          asset_content_type: text/plain
