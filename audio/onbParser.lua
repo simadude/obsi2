@@ -29,7 +29,7 @@ function onb.parseONB(data)
 	local notes = {}
 	for l = 6, #lines do
 		local str = lines[l]..","
-		if str:sub(1, 1) ~= "#" then
+		if str:sub(1, 1) ~= "#" and str:find("%w") then
 			local note = {}
 			local charstart = 1
 			local charend
