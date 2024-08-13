@@ -216,7 +216,6 @@ local function catch(err)
 	term.setBackgroundColor(colors.black)
 	term.clear()
 	term.setCursorPos(1, 1)
-	os.pullEvent()
 	printError(debug.traceback(err, 2))
 	-- if obsi.debugger then
 	-- 	obsi.debugger.print(debug.traceback(err, 2))
