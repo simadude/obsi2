@@ -25,8 +25,9 @@ local emptyFunc = function(...) end
 ---@type fun()
 local fsInit
 obsi.fs, fsInit = require("obsi2.fs")(gamePath)
+---@type obsi.system
 obsi.system = require("obsi2.system")
-if obsi.system.getClockSpeed() == 20 then
+if not periphemu then
 	config.sleepOption = 2
 end
 ---@type obsi.graphics, obsi.InternalCanvas, Window
