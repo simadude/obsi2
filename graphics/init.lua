@@ -6,7 +6,7 @@ renderers.pixelbox = require("obsi2.graphics.pixelbox")
 renderers.basic = require("obsi2.graphics.basic")
 local nfp = require("obsi2.graphics.nfpParser")
 local orli = require("obsi2.graphics.orliParser")
----@type Window
+---@type ccTweaked.Window
 local wind
 do
 	local w, h = term.getSize()

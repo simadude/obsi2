@@ -30,7 +30,7 @@ obsi.system = require("obsi2.system")
 if not periphemu then
 	config.sleepOption = 2
 end
----@type obsi.graphics, obsi.InternalCanvas, Window
+---@type obsi.graphics, obsi.InternalCanvas, ccTweaked.Window
 obsi.graphics, canvas, winh = require("obsi2.graphics")(obsi.fs, config.renderingAPI)
 obsi.timer, setFps = require("obsi2.timer")()
 obsi.keyboard = require("obsi2.keyboard")
@@ -55,7 +55,7 @@ obsi.onMouseMove = emptyFunc
 obsi.onKeyPress = emptyFunc
 ---@type fun(key: integer)
 obsi.onKeyRelease = emptyFunc
----@type fun(wind: Window)
+---@type fun(wind: ccTweaked.Window)
 obsi.onWindowFlush = emptyFunc -- sends a window object as a first argument, which you can mutate if you wish.
 ---@type fun(w: integer, h: integer)
 obsi.onResize = emptyFunc	-- sends width and height of the window in characters, not pixels. 
