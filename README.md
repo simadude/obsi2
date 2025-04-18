@@ -4,6 +4,8 @@
 
 Obsi 2 is a Lua library that was designed specifically for CC:Tweaked. Originally it was made as a game engine, but I have refactored it into a library for easier packaging.
 
+📖 Wiki: https://github.com/simadude/obsi2/wiki
+
 Improvements in Obsi 2:
 * More optimized `obsi.graphics.rectangle` function
 * New `obsi.graphics.getPalette` function! (Yes, it didn't exist before. Also be aware that it creates a new table on every call. Sorry.)
