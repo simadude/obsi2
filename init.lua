@@ -160,6 +160,15 @@ end
 local function eventLoop()
 	while true do
 		local eventData = {os.pullEventRaw()}
+
+      -- increase key timers
+      for key in pairs(obsi.keyboard.keys) do
+         obsi.keyboard.keys[key] = obsi.keyboard.keys[key] + 1
+      end
+      for scancode in pairs(obsi.keyboard.scancodes) do
+         obsi.keyboard.scancodes[scancode] = obsi.keyboard.scancodes[scancode] + 1
+      end
+
 		if eventData[1] == "mouse_click" then
 			mouseDown(eventData[3], eventData[4], eventData[2])
 			obsi.onMousePress(eventData[3], eventData[4], eventData[2])
@@ -180,8 +189,8 @@ local function eventLoop()
 			obsi.graphics.width, obsi.graphics.height = w, h
 			obsi.onResize(w, h)
 		elseif eventData[1] == "key" and not eventData[3] then
-			obsi.keyboard.keys[keys.getName(eventData[2])] = true
-			obsi.keyboard.scancodes[eventData[2]] = true
+			obsi.keyboard.keys[keys.getName(eventData[2])] = 0
+			obsi.keyboard.scancodes[eventData[2]] = 0
 			obsi.onKeyPress(eventData[2])
 
 			-- --the code below is only for testing!
@@ -197,8 +206,8 @@ local function eventLoop()
 			-- 	obsi.debug = not obsi.debug
 			-- end
 		elseif eventData[1] == "key_up" then
-			obsi.keyboard.keys[keys.getName(eventData[2])] = false
-			obsi.keyboard.scancodes[eventData[2]] = false
+			obsi.keyboard.keys[keys.getName(eventData[2])] = nil
+			obsi.keyboard.scancodes[eventData[2]] = nil
 			obsi.onKeyRelease(eventData[2])
 		elseif eventData[1] == "terminate" or quit then
 			obsi.onQuit()
