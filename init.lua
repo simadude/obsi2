@@ -35,10 +35,10 @@ obsi.graphics, canvas, winh = require("obsi2.graphics")(obsi.fs, config.renderin
 obsi.timer, setFps = require("obsi2.timer")()
 obsi.keyboard = require("obsi2.keyboard")
 obsi.mouse, mouseDown, mouseUp, mouseMove = require("obsi2.mouse")()
-obsi.audio, soundLoop = require("obsi2.audio")(obsi.fs)
+obsi.audio, soundLoop, DFPWMLoop = require("obsi2.audio")(obsi.fs)
 obsi.state = require("obsi2.state")
 obsi.debug = false
-obsi.version = "2.0.2"
+obsi.version = "2.1.0"
 
 obsi.load = emptyFunc
 ---@type fun(dt: number)
@@ -116,6 +116,7 @@ local function gameLoop()
 		drawTime = clock() - updateTime - startTime
 		obsi.graphics.setCanvas()
 		soundLoop(dt)
+		DFPWMLoop()
 		if obsi.debug then
 			local bg, fg = obsi.graphics.bgColor, obsi.graphics.fgColor
 			obsi.graphics.bgColor, obsi.graphics.fgColor = colors.black, colors.white
@@ -203,10 +204,13 @@ local function eventLoop()
 		elseif eventData[1] == "terminate" or quit then
 			obsi.onQuit()
 			obsi.graphics.clearPalette()
+			obsi.audio.stopAll()
 			term.setBackgroundColor(colors.black)
 			term.clear()
 			term.setCursorPos(1, 1)
 			return
+		elseif eventData[1] == "speaker_audio_empty" then
+			DFPWMLoop(eventData[2])
 		end
 		obsi.onEvent(eventData)
 	end

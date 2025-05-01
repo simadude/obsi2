@@ -1,6 +1,10 @@
 local fs
 local onb = require("obsi2.audio.onbParser")
 local nbs = require("obsi2.audio.nbsParser")
+local dfpwm = require("cc.audio.dfpwm").make_decoder()
+local function clock()
+	return periphemu and os.epoch(("nano")--[[@as "local"]])/10^9 or os.clock()
+end
 local t = os.clock()
 ---@class obsi.audio
 local audio = {}
@@ -34,6 +38,28 @@ local fakeSpeaker = false
 ---@field loop boolean
 ---@field playing boolean
 
+---@class obsi.AudioDFPWM
+---@field name string
+---@field sampleRate number
+---@field samples number[]
+
+---@class obsi.PlayingAudioDFPWM
+---@field channel number
+---@field audio obsi.AudioDFPWM
+---@field lastSample number Index of the sample
+---@field lastSampleTime number The last time previous buffer was played
+---@field volume number
+---@field loop boolean
+---@field playing boolean
+
+local dfpwmbuffers = {}
+
+---@type table<integer, integer[]>
+dfpwmbuffers.channels = {}
+---@type table<integer, obsi.PlayingAudioDFPWM>
+dfpwmbuffers.sounds = {}
+dfpwmbuffers.size = 24000 -- 48k = 1s, 24k = 0.5s (this is to sync stuff ig)
+
 local audiobuffer = {}
 ---@type obsi.PlayingAudio[]
 audiobuffer.sounds = {}
@@ -58,7 +84,7 @@ function audio.playNote(channel, instrument, pitch, volume, latency)
 	end)
 end
 
--- Plays a single note. If you are not sure what channel to use, just use 1.
+-- Plays a single sound. If you are not sure what channel to use, just use 1.
 ---@param channel integer
 ---@param sound string
 ---@param pitch number  from 0 to 24
@@ -86,6 +112,20 @@ function audio.refreshChannels()
 	if #chans ~= 0 then
 		channels = chans
 		fakeSpeaker = false
+		for k, v in ipairs(channels) do
+			if dfpwmbuffers.channels[k] then
+				local buffer = dfpwmbuffers.channels[k]
+				for i = 1, dfpwmbuffers.size do
+					buffer[i] = 0
+				end
+			else
+				local buffer = {}
+				for i = 1, dfpwmbuffers.size do
+					buffer[i] = 0
+				end
+				dfpwmbuffers.channels[k] = buffer
+			end
+		end
 	else
 		if periphemu then
 			periphemu.create("ObsiSpeaker", "speaker")
@@ -99,6 +139,20 @@ function audio.refreshChannels()
 				stop = function() end,
 			}
 			fakeSpeaker = true
+		end
+		for k, v in ipairs(channels) do
+			if dfpwmbuffers.channels[k] then
+				local buffer = dfpwmbuffers.channels[k]
+				for i = 1, dfpwmbuffers.size do
+					buffer[i] = 0
+				end
+			else
+				local buffer = {}
+				for i = 1, dfpwmbuffers.size do
+					buffer[i] = 0
+				end
+				dfpwmbuffers.channels[k] = buffer
+			end
 		end
 	end
 end
@@ -139,6 +193,23 @@ function audio.newSound(soundPath)
 	end
 end
 
+---@param soundPath string
+---@param sampleRate? integer
+---@return obsi.AudioDFPWM
+function audio.newSoundDFPWM(soundPath, sampleRate)
+	sampleRate = sampleRate or 48000
+	local contents, e = fs.read(soundPath)
+	if not contents then
+		error(e)
+	end
+	local samp = dfpwm(contents) -- fuck ram, man
+	return {
+		name = soundPath,
+		samples = samp,
+		sampleRate = sampleRate
+	}
+end
+
 ---@param source obsi.Audio
 ---@param loop? boolean
 ---@return integer
@@ -165,6 +236,39 @@ function audio.play(source, loop)
 	return -1
 end
 
+---@param channel integer|nil
+---@param source obsi.AudioDFPWM
+---@param loop? boolean
+---@return integer
+function audio.playDFPWM(channel, source, loop)
+	if not channel then
+		local choseChannel = false
+		for k, _ in ipairs(channels) do
+			if not dfpwmbuffers.channels[k] then
+				channel = k
+				choseChannel = true
+			end
+		end
+		if not choseChannel then
+			return -1
+		end
+	end
+	---@cast channel integer
+
+	---@type obsi.PlayingAudioDFPWM
+	local paudio = {
+		channel = channel,
+		audio = source,
+		lastSample = 1,
+		loop = loop or false,
+		playing = true,
+		lastSampleTime = os.clock(),
+		volume = 1
+	}
+	dfpwmbuffers.sounds[channel] = paudio
+	return channel
+end
+
 ---@param source obsi.Audio|integer
 function audio.stop(source)
 	if type(source) == "number" then
@@ -181,12 +285,45 @@ function audio.stop(source)
 	end
 end
 
+--- Stops a speaker at that channel by calling `speaker.stop()`.
+---@param channelID integer
+function audio.stopSpeaker(channelID)
+	if channels[channelID] then
+		channels[channelID].stop()
+	end
+end
+
+--- Removes a DFPWM sound from a channel.
+---@param channelID integer
+function audio.stopDFPWM(channelID)
+	if dfpwmbuffers.sounds[channelID] then
+		dfpwmbuffers.sounds[channelID] = nil
+	end
+end
+
+--- Stops whatever sound any speaker is playing by calling `speaker.stop()` on each.
+function audio.stopAll()
+	for _, speaker in pairs(channels) do
+		speaker.stop()
+	end
+end
+
 ---@param source obsi.Audio
 ---@param id integer
 ---@return boolean
 function audio.isID(source, id)
 	if audiobuffer.sounds[id] then
 		return audiobuffer.sounds[id].audio == source
+	end
+	return false
+end
+
+---@param source obsi.AudioDFPWM
+---@param channelID integer
+---@return boolean
+function audio.isIDDFPWM(source, channelID)
+	if dfpwmbuffers.sounds[channelID] then
+		return dfpwmbuffers.sounds[channelID].audio == source
 	end
 	return false
 end
@@ -215,6 +352,12 @@ function audio.pause(source)
 				pauseAudio(s)
 			end
 		end
+	end
+end
+
+function audio.pauseDFPWM(channel)
+	if dfpwmbuffers.sounds[channel] then
+		dfpwmbuffers.sounds[channel].playing = false
 	end
 end
 
@@ -252,6 +395,12 @@ function audio.unpause(source)
 	end
 end
 
+function audio.unpauseDFPWM(channel)
+	if dfpwmbuffers.sounds[channel] then
+		dfpwmbuffers.sounds[channel].playing = true
+	end
+end
+
 ---@param source obsi.PlayingAudio
 ---@param volume number
 local function setVolumeAudio(source, volume)
@@ -276,15 +425,55 @@ function audio.setVolume(source, volume)
 	end
 end
 
+function audio.setVolumeDFPWM(channel, volume)
+	if dfpwmbuffers.sounds[channel] then
+		dfpwmbuffers.sounds[channel].volume = volume
+	end
+end
+
 ---@param id integer
 function audio.getVolume(id)
 	return audiobuffer.sounds[id] and audiobuffer.sounds[id].volume or 0
+end
+
+function audio.getVolumeDFPWM(channel)
+	if dfpwmbuffers.sounds[channel] then
+		return dfpwmbuffers.sounds[channel].volume
+	end
+	return 0
 end
 
 ---@param id integer
 ---@return boolean
 function audio.isPaused(id)
 	return audiobuffer.sounds[id] and audiobuffer.sounds[id].playing or false
+end
+
+function audio.isPausedDFPWM(channel)
+	if dfpwmbuffers.sounds[channel] then
+		return dfpwmbuffers.sounds[channel].playing
+	end
+	return false
+end
+
+---@param channel integer
+---@return number # Returns the total duration (in seconds) of the playing DFPWM at the specified channel
+function audio.getDurationDFPWM(channel)
+	local au = dfpwmbuffers.sounds[channel]
+	if au then
+		return #au.audio.samples/au.audio.sampleRate
+	end
+	return 0
+end
+
+---@param channel integer
+---@return number # Returns the current playback (in seconds) of the playing DFPWM at the specified channel
+function audio.getPlaybackDFPWM(channel)
+	local au = dfpwmbuffers.sounds[channel]
+	if au then
+		return (#au.audio.samples - au.lastSample)/au.audio.sampleRate -- + au.lastSampleTime - clock()
+	end
+	return 0
 end
 
 ---@param dt number
@@ -338,10 +527,77 @@ local function soundLoop(dt)
 	end
 end
 
+---@param speakerName? string
+local function DFPWMLoop(speakerName)
+	local time = clock()
+	if speakerName then
+		local cid = 0 -- Channel index
+		for k, channel in pairs(channels) do
+			if not channel.fakeSpeaker and peripheral.getName(channel) == speakerName then
+				cid = k
+				break
+			end
+		end
+		if cid == 0 then
+			return
+		end
+		local sound = dfpwmbuffers.sounds[cid]
+		if sound and sound.playing then
+			local samples = sound.audio.samples
+			local speed = sound.audio.sampleRate/48000
+			if time-sound.lastSampleTime >= 0.45 then -- idk why, but this is needed
+				local buf = dfpwmbuffers.channels[cid]
+				local j = 1
+				for i = 1, dfpwmbuffers.size do
+					buf[i] = samples[sound.lastSample + math.floor(j)]
+					j = j + speed
+				end
+				channels[cid].playAudio(buf)
+				sound.lastSample = sound.lastSample + math.floor(j)
+				if sound.lastSample > #samples then
+					if sound.loop then
+						sound.lastSample = 1
+					else
+						dfpwmbuffers.sounds[cid] = nil
+					end
+				else
+					sound.lastSampleTime = time
+				end
+			end
+		end
+	else
+		for cid, sound in pairs(dfpwmbuffers.sounds) do
+			if sound.playing then
+				local samples = sound.audio.samples
+				local speed = sound.audio.sampleRate/48000
+				if time-sound.lastSampleTime > 0.5 then
+					local buf = dfpwmbuffers.channels[cid]
+					local j = 1
+					for i = 1, dfpwmbuffers.size do
+						buf[i] = samples[sound.lastSample + math.floor(j)]
+						j = j + speed
+					end
+					channels[cid].playAudio(buf)
+					sound.lastSample = sound.lastSample + math.floor(j)
+					if sound.lastSample > #samples then
+						if sound.loop then
+							sound.lastSample = 1
+						else
+							dfpwmbuffers.sounds[cid] = nil
+						end
+					else
+						sound.lastSampleTime = time
+					end
+				end
+			end
+		end
+	end
+end
+
 local function init(obsifs)
 	fs = obsifs
 	audio.refreshChannels()
-	return audio, soundLoop
+	return audio, soundLoop, DFPWMLoop
 end
 
 return init
