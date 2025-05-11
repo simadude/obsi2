@@ -45,7 +45,7 @@ jobs:
       - name: Generate changelog
         run: |
             CURRENT_TAG=$(echo ${{ github.ref }} | sed 's/refs\/tags\///')
-            git cliff --version "$CURRENT_TAG" -o CHANGELOG.md
+            git cliff --tag "$CURRENT_TAG" -o CHANGELOG.md
 
       - name: Create Release
         id: create_release
