@@ -24,6 +24,7 @@ local soundLoop, mouseDown, mouseMove, mouseUp, setFps
 local emptyFunc = function(...) end
 ---@type fun()
 local fsInit
+---@type obsi.fs
 obsi.fs, fsInit = require("obsi2.fs")(gamePath)
 ---@type obsi.system
 obsi.system = require("obsi2.system")
@@ -32,10 +33,15 @@ if not periphemu then
 end
 ---@type obsi.graphics, obsi.InternalCanvas, ccTweaked.Window
 obsi.graphics, canvas, winh = require("obsi2.graphics")(obsi.fs, config.renderingAPI)
+---@type obsi.timer
 obsi.timer, setFps = require("obsi2.timer")()
+---@type obsi.keyboard
 obsi.keyboard = require("obsi2.keyboard")
+---@type obsi.mouse
 obsi.mouse, mouseDown, mouseUp, mouseMove = require("obsi2.mouse")()
+---@type obsi.audio
 obsi.audio, soundLoop, DFPWMLoop = require("obsi2.audio")(obsi.fs)
+---@type obsi.state
 obsi.state = require("obsi2.state")
 obsi.debug = false
 obsi.version = "2.1.0"
